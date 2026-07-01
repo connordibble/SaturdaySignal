@@ -69,40 +69,40 @@ export function TeamChat({ teamSlug, suggestedPrompts }: TeamChatProps) {
   return (
     <div className="flex flex-1 flex-col justify-between gap-8 p-5">
       <div className="max-w-3xl">
-        <p className="text-sm font-semibold uppercase tracking-normal text-[#7f3f25]">
+        <p className="text-sm font-semibold uppercase tracking-normal text-[var(--team-accent-strong)]">
           Grounded assistant
         </p>
-        <h2 className="mt-3 max-w-2xl text-4xl font-semibold leading-tight tracking-normal text-[#111411] sm:text-5xl">
-          Built for fans who want signal, not generic recap sludge.
+        <h2 className="mt-3 max-w-2xl text-4xl font-semibold leading-tight tracking-normal text-[var(--team-ink)] sm:text-5xl">
+          Texas context, clean sources, Saturday-level signal.
         </h2>
-        <p className="mt-4 max-w-2xl text-base leading-7 text-[#4f5a52]">
+        <p className="mt-4 max-w-2xl text-base leading-7 text-[var(--team-muted)]">
           Saturday Signal pairs trusted sources, retrieval, and a sports-native
           voice so answers sound like a sharp fan analyst with citations, not a
           tech demo in team colors.
         </p>
       </div>
 
-      <section className="rounded-md border border-[#d8d4c6] bg-[#f9f7ef] p-4">
-        <div className="flex flex-wrap items-center gap-2 text-xs font-semibold uppercase tracking-normal text-[#657068]">
+      <section className="rounded-md border border-[var(--team-border-strong)] bg-[var(--team-surface-soft)] p-4">
+        <div className="flex flex-wrap items-center gap-2 text-xs font-semibold uppercase tracking-normal text-[var(--team-accent-strong)]">
           <span>Confidence: {response.confidence}</span>
           <span aria-hidden="true">/</span>
           <span>{response.freshness}</span>
         </div>
-        <p className="mt-3 whitespace-pre-wrap text-sm leading-6 text-[#29322d]">
+        <p className="mt-3 whitespace-pre-wrap text-sm leading-6 text-[var(--team-ink-subtle)]">
           {error ?? response.answer}
         </p>
         {response.citations.length > 0 ? (
           <div className="mt-4 grid gap-2">
             {response.citations.map((citation) => (
               <a
-                className="inline-flex items-center justify-between gap-3 rounded-md border border-[#d8d4c6] bg-[#fffdf7] px-3 py-2 text-sm font-medium text-[#29322d] transition hover:border-[#8aa897]"
+                className="inline-flex items-center justify-between gap-3 rounded-md border border-[var(--team-border)] bg-[var(--team-surface)] px-3 py-2 text-sm font-medium text-[var(--team-ink-subtle)] transition hover:border-[var(--team-accent)]"
                 href={citation.sourceUrl ?? "#"}
                 key={citation.id}
                 rel="noreferrer"
                 target="_blank"
               >
                 <span>{citation.title}</span>
-                <span className="inline-flex items-center gap-2 text-xs uppercase text-[#657068]">
+                <span className="inline-flex items-center gap-2 text-xs uppercase text-[var(--team-muted)]">
                   {citation.provider}
                   <ExternalLink aria-hidden="true" size={14} />
                 </span>
@@ -115,7 +115,7 @@ export function TeamChat({ teamSlug, suggestedPrompts }: TeamChatProps) {
       <div className="grid gap-3 sm:grid-cols-3">
         {suggestedPrompts.map((prompt) => (
           <button
-            className="min-h-24 rounded-md border border-[#d8d4c6] bg-[#f9f7ef] p-4 text-left text-sm font-medium leading-5 text-[#29322d] transition hover:border-[#8aa897] hover:bg-[#eef5ef]"
+            className="min-h-24 rounded-md border border-[var(--team-border)] bg-[var(--team-surface-soft)] p-4 text-left text-sm font-medium leading-5 text-[var(--team-ink-subtle)] transition hover:border-[var(--team-accent)] hover:bg-[var(--team-surface-strong)]"
             key={prompt}
             onClick={() => submit(prompt)}
             type="button"
@@ -126,7 +126,7 @@ export function TeamChat({ teamSlug, suggestedPrompts }: TeamChatProps) {
       </div>
 
       <form
-        className="flex flex-col gap-3 border-t border-[#e0dccf] pt-5 sm:flex-row"
+        className="flex flex-col gap-3 border-t border-[var(--team-border)] pt-5 sm:flex-row"
         onSubmit={(event) => {
           event.preventDefault();
           void submit(input);
@@ -136,7 +136,7 @@ export function TeamChat({ teamSlug, suggestedPrompts }: TeamChatProps) {
           Ask Saturday Signal
         </label>
         <input
-          className="min-h-12 flex-1 rounded-md border border-[#c9c2b0] bg-white px-4 text-sm text-[#171916] outline-none transition placeholder:text-[#7b827b] focus:border-[#557763] focus:ring-2 focus:ring-[#b8d8c0]"
+          className="min-h-12 flex-1 rounded-md border border-[var(--team-border-strong)] bg-[var(--team-contrast)] px-4 text-sm text-[var(--team-ink)] outline-none transition placeholder:text-[var(--team-muted)] focus:border-[var(--team-accent)] focus:ring-2 focus:ring-[var(--team-accent-soft)]"
           id="chat-input"
           onChange={(event) => setInput(event.target.value)}
           placeholder="Ask for a next-game brief, matchup read, or source-backed context..."
@@ -144,7 +144,7 @@ export function TeamChat({ teamSlug, suggestedPrompts }: TeamChatProps) {
           value={input}
         />
         <button
-          className="inline-flex min-h-12 items-center justify-center gap-2 rounded-md bg-[#17221d] px-5 text-sm font-semibold text-[#f6f5f1] transition hover:bg-[#26382f] disabled:cursor-not-allowed disabled:opacity-70"
+          className="inline-flex min-h-12 items-center justify-center gap-2 rounded-md bg-[var(--team-accent)] px-5 text-sm font-semibold text-[var(--team-contrast)] transition hover:bg-[var(--team-accent-strong)] disabled:cursor-not-allowed disabled:opacity-70"
           disabled={isLoading}
           type="submit"
         >
