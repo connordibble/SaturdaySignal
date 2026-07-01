@@ -3,6 +3,10 @@
   "version": "0.1.0",
   "private": true,
   "packageManager": "pnpm@10.33.0",
+  "engines": {
+    "node": ">=24.0.0",
+    "pnpm": "10.33.0"
+  },
   "scripts": {
     "dev": "next dev",
     "build": "next build",
@@ -16,7 +20,8 @@
     "db:migrate": "tsx scripts/migrate.ts",
     "db:seed": "tsx scripts/seed.ts",
     "ingest": "tsx scripts/ingest.ts",
-    "check": "pnpm lint && pnpm typecheck && pnpm test"
+    "check": "pnpm lint && pnpm typecheck && pnpm test",
+    "release:check": "pnpm check && pnpm eval && pnpm build && pnpm test:e2e"
   },
   "dependencies": {
     "drizzle-orm": "^0.45.2",
