@@ -6,6 +6,7 @@ import { Activity, ExternalLink, Loader2 } from "lucide-react";
 type TeamChatProps = {
   teamSlug: string;
   suggestedPrompts: string[];
+  tagline: string;
 };
 
 type ChatCitation = {
@@ -30,7 +31,7 @@ const starterAnswer: ChatResponse = {
   freshness: "Waiting for your first question.",
 };
 
-export function TeamChat({ teamSlug, suggestedPrompts }: TeamChatProps) {
+export function TeamChat({ teamSlug, suggestedPrompts, tagline }: TeamChatProps) {
   const [input, setInput] = useState("");
   const [response, setResponse] = useState<ChatResponse>(starterAnswer);
   const [isLoading, setIsLoading] = useState(false);
@@ -73,7 +74,7 @@ export function TeamChat({ teamSlug, suggestedPrompts }: TeamChatProps) {
           Grounded assistant
         </p>
         <h2 className="mt-3 max-w-2xl text-4xl font-semibold leading-tight tracking-normal text-[var(--team-ink)] sm:text-5xl">
-          Texas context, clean sources, Saturday-level signal.
+          {tagline}
         </h2>
         <p className="mt-4 max-w-2xl text-base leading-7 text-[var(--team-muted)]">
           Saturday Signal pairs trusted sources, retrieval, and a sports-native
@@ -93,21 +94,39 @@ export function TeamChat({ teamSlug, suggestedPrompts }: TeamChatProps) {
         </p>
         {response.citations.length > 0 ? (
           <div className="mt-4 grid gap-2">
-            {response.citations.map((citation) => (
-              <a
-                className="inline-flex items-center justify-between gap-3 rounded-md border border-[var(--team-border)] bg-[var(--team-surface)] px-3 py-2 text-sm font-medium text-[var(--team-ink-subtle)] transition hover:border-[var(--team-accent)]"
-                href={citation.sourceUrl ?? "#"}
-                key={citation.id}
-                rel="noreferrer"
-                target="_blank"
-              >
-                <span>{citation.title}</span>
+            {response.citations.map((citation) => {
+              const rowClass =
+                "inline-flex items-center justify-between gap-3 rounded-md border border-[var(--team-border)] bg-[var(--team-surface)] px-3 py-2 text-sm font-medium text-[var(--team-ink-subtle)]";
+
+              const meta = (
                 <span className="inline-flex items-center gap-2 text-xs uppercase text-[var(--team-muted)]">
                   {citation.provider}
-                  <ExternalLink aria-hidden="true" size={14} />
+                  {citation.sourceUrl ? <ExternalLink aria-hidden="true" size={14} /> : null}
                 </span>
-              </a>
-            ))}
+              );
+
+              if (!citation.sourceUrl) {
+                return (
+                  <div className={rowClass} key={citation.id}>
+                    <span>{citation.title}</span>
+                    {meta}
+                  </div>
+                );
+              }
+
+              return (
+                <a
+                  className={`${rowClass} transition hover:border-[var(--team-accent)]`}
+                  href={citation.sourceUrl}
+                  key={citation.id}
+                  rel="noreferrer"
+                  target="_blank"
+                >
+                  <span>{citation.title}</span>
+                  {meta}
+                </a>
+              );
+            })}
           </div>
         ) : null}
       </section>

@@ -6,7 +6,8 @@ import {
   ShieldCheck,
 } from "lucide-react";
 import type { CSSProperties } from "react";
-import type { TeamConfig } from "@/config/team";
+import { getSourceReadiness, type TeamConfig } from "@/config/team";
+import { formatSite, getNextGame } from "@/server/schedule/schedule";
 import { SchedulePreview } from "./schedule-preview";
 import { TeamChat } from "./team-chat";
 
@@ -15,6 +16,9 @@ type TeamDashboardProps = {
 };
 
 export function TeamDashboard({ team }: TeamDashboardProps) {
+  const nextGame = getNextGame(team.slug);
+  const sourceStates = getSourceReadiness(team);
+
   return (
     <main
       className="min-h-screen bg-[var(--team-page)] text-[var(--team-ink)]"
@@ -51,46 +55,52 @@ export function TeamDashboard({ team }: TeamDashboardProps) {
               </div>
             </div>
 
-            <TeamChat teamSlug={team.slug} suggestedPrompts={team.suggestedPrompts} />
+            <TeamChat
+              teamSlug={team.slug}
+              suggestedPrompts={team.suggestedPrompts}
+              tagline={team.tagline}
+            />
           </div>
 
           <aside className="grid content-start gap-5">
-            <section className="rounded-lg border border-[var(--team-border-strong)] bg-[var(--team-surface)] p-5 shadow-sm">
-              <div className="flex items-center justify-between gap-4">
-                <div>
-                  <p className="text-xs font-semibold uppercase tracking-normal text-[var(--team-accent-strong)]">
-                    Next game
-                  </p>
-                  <h2 className="mt-2 text-2xl font-semibold tracking-normal">
-                    Texas {formatSite(team.nextGame.site)} {team.nextGame.opponent}
-                  </h2>
+            {nextGame ? (
+              <section className="rounded-lg border border-[var(--team-border-strong)] bg-[var(--team-surface)] p-5 shadow-sm">
+                <div className="flex items-center justify-between gap-4">
+                  <div>
+                    <p className="text-xs font-semibold uppercase tracking-normal text-[var(--team-accent-strong)]">
+                      Next game
+                    </p>
+                    <h2 className="mt-2 text-2xl font-semibold tracking-normal">
+                      {team.shortName} {formatSite(nextGame.site)} {nextGame.opponent}
+                    </h2>
+                  </div>
+                  <CalendarDays aria-hidden="true" className="text-[var(--team-accent)]" size={25} />
                 </div>
-                <CalendarDays aria-hidden="true" className="text-[var(--team-accent)]" size={25} />
-              </div>
-              <dl className="mt-5 grid grid-cols-2 gap-3 text-sm">
-                <div className="rounded-md bg-[var(--team-surface-soft)] p-3">
-                  <dt className="font-semibold text-[var(--team-muted)]">Date</dt>
-                  <dd className="mt-1 text-[var(--team-ink)]">{team.nextGame.date}</dd>
-                </div>
-                <div className="rounded-md bg-[var(--team-surface-soft)] p-3">
-                  <dt className="font-semibold text-[var(--team-muted)]">Venue</dt>
-                  <dd className="mt-1 text-[var(--team-ink)]">{team.nextGame.venue}</dd>
-                </div>
-                <div className="rounded-md bg-[var(--team-surface-soft)] p-3">
-                  <dt className="font-semibold text-[var(--team-muted)]">Kickoff</dt>
-                  <dd className="mt-1 text-[var(--team-ink)]">{team.nextGame.kickoff}</dd>
-                </div>
-                <div className="rounded-md bg-[var(--team-surface-soft)] p-3">
-                  <dt className="font-semibold text-[var(--team-muted)]">TV</dt>
-                  <dd className="mt-1 text-[var(--team-ink)]">{team.nextGame.tv ?? "TBD"}</dd>
-                </div>
-              </dl>
-              <p className="mt-4 text-sm leading-6 text-[var(--team-muted)]">
-                {team.nextGame.note}
-              </p>
-            </section>
+                <dl className="mt-5 grid grid-cols-2 gap-3 text-sm">
+                  <div className="rounded-md bg-[var(--team-surface-soft)] p-3">
+                    <dt className="font-semibold text-[var(--team-muted)]">Date</dt>
+                    <dd className="mt-1 text-[var(--team-ink)]">{nextGame.dateLabel}</dd>
+                  </div>
+                  <div className="rounded-md bg-[var(--team-surface-soft)] p-3">
+                    <dt className="font-semibold text-[var(--team-muted)]">Venue</dt>
+                    <dd className="mt-1 text-[var(--team-ink)]">{nextGame.venue}</dd>
+                  </div>
+                  <div className="rounded-md bg-[var(--team-surface-soft)] p-3">
+                    <dt className="font-semibold text-[var(--team-muted)]">Kickoff</dt>
+                    <dd className="mt-1 text-[var(--team-ink)]">{nextGame.kickoff}</dd>
+                  </div>
+                  <div className="rounded-md bg-[var(--team-surface-soft)] p-3">
+                    <dt className="font-semibold text-[var(--team-muted)]">TV</dt>
+                    <dd className="mt-1 text-[var(--team-ink)]">{nextGame.tv ?? "TBD"}</dd>
+                  </div>
+                </dl>
+                <p className="mt-4 text-sm leading-6 text-[var(--team-muted)]">
+                  {team.nextGameNote}
+                </p>
+              </section>
+            ) : null}
 
-            <SchedulePreview />
+            <SchedulePreview teamSlug={team.slug} />
 
             <section className="rounded-lg border border-[var(--team-border)] bg-[var(--team-surface)] p-5 shadow-sm">
               <div className="flex items-center gap-2 text-sm font-semibold text-[var(--team-ink-subtle)]">
@@ -98,7 +108,7 @@ export function TeamDashboard({ team }: TeamDashboardProps) {
                 Source readiness
               </div>
               <div className="mt-4 space-y-3">
-                {team.sourceStates.map((source) => (
+                {sourceStates.map((source) => (
                   <div
                     className="flex items-center justify-between gap-3 rounded-md bg-[var(--team-surface-soft)] px-3 py-2"
                     key={source.label}
@@ -144,12 +154,4 @@ function createTeamThemeStyle(team: TeamConfig) {
     "--team-contrast": team.theme.contrast,
     "--team-steel": team.theme.steel,
   } as CSSProperties;
-}
-
-function formatSite(site: TeamConfig["nextGame"]["site"]) {
-  if (site === "away") {
-    return "at";
-  }
-
-  return "vs";
 }

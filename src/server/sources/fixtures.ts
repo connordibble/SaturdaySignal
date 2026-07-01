@@ -1,61 +1,70 @@
-import scheduleFixture from "../../../data/fixtures/texas-football/schedule.json";
 import { createSourceDocumentId } from "./ids";
+import {
+  formatCaptureDate,
+  formatSite,
+  getTeamSchedule,
+  type ScheduleGame,
+  type TeamSchedule,
+} from "@/server/schedule/schedule";
 import type { SourceDocument } from "./types";
 
-type ScheduleFixture = typeof scheduleFixture;
-type FixtureGame = ScheduleFixture["games"][number];
-
 export function getFixtureScheduleDocuments(teamSlug: string): SourceDocument[] {
-  if (teamSlug !== scheduleFixture.teamSlug) {
+  const schedule = getTeamSchedule(teamSlug);
+
+  if (!schedule) {
     return [];
   }
 
-  const fetchedAt = scheduleFixture.capturedAt;
-  const summary = createScheduleSummaryDocument(scheduleFixture, fetchedAt);
-  const games = scheduleFixture.games.map((game) =>
-    createGameDocument(scheduleFixture, game, fetchedAt),
+  const fetchedAt = schedule.capturedAt;
+  const summary = createScheduleSummaryDocument(schedule, fetchedAt);
+  const games = schedule.games.map((game) =>
+    createGameDocument(schedule, game, fetchedAt),
   );
 
   return [summary, ...games];
 }
 
 function createScheduleSummaryDocument(
-  fixture: ScheduleFixture,
+  schedule: TeamSchedule,
   fetchedAt: string,
 ): SourceDocument {
+  const opener = schedule.games[0];
+  const captured = formatCaptureDate(schedule.capturedAt);
+
   return {
-    id: createSourceDocumentId([fixture.teamSlug, String(fixture.seasonYear), "schedule"]),
-    teamSlug: fixture.teamSlug,
+    id: createSourceDocumentId([schedule.teamSlug, String(schedule.seasonYear), "schedule"]),
+    teamSlug: schedule.teamSlug,
     provider: "fixture",
     sourceType: "schedule",
-    sourceUrl: fixture.sourceUrl,
-    title: `Texas football ${fixture.seasonYear} schedule`,
-    body: `Texas has ${fixture.games.length} regular-season games on the ${fixture.seasonYear} official schedule fixture. The opener is ${formatSite(fixture.games[0])} ${fixture.games[0].opponent} on ${fixture.games[0].dateLabel} at ${fixture.games[0].venue}. Source freshness: captured from the official schedule on July 1, 2026.`,
+    sourceUrl: schedule.sourceUrl,
+    title: `${schedule.teamDisplayName} ${schedule.seasonYear} schedule`,
+    body: `${schedule.teamDisplayName} has ${schedule.games.length} regular-season games on the ${schedule.seasonYear} official schedule fixture. The opener is ${formatSite(opener.site)} ${opener.opponent} on ${opener.dateLabel} at ${opener.venue}. Source freshness: captured from the official schedule on ${captured}.`,
     metadata: {
-      seasonYear: fixture.seasonYear,
-      gameCount: fixture.games.length,
+      seasonYear: schedule.seasonYear,
+      gameCount: schedule.games.length,
     },
     fetchedAt,
   };
 }
 
 function createGameDocument(
-  fixture: ScheduleFixture,
-  game: FixtureGame,
+  schedule: TeamSchedule,
+  game: ScheduleGame,
   fetchedAt: string,
 ): SourceDocument {
   const tv = game.tv ? ` TV: ${game.tv}.` : " TV assignment is not confirmed in the fixture.";
+  const captured = formatCaptureDate(schedule.capturedAt);
 
   return {
-    id: createSourceDocumentId([fixture.teamSlug, game.id]),
-    teamSlug: fixture.teamSlug,
+    id: createSourceDocumentId([schedule.teamSlug, game.id]),
+    teamSlug: schedule.teamSlug,
     provider: "fixture",
     sourceType: "game",
-    sourceUrl: fixture.sourceUrl,
-    title: `Texas ${formatSite(game)} ${game.opponent}`,
-    body: `Texas ${formatSite(game)} ${game.opponent} on ${game.dateLabel}. Kickoff: ${game.kickoff}. Venue: ${game.venue}.${tv} Source freshness: official schedule fixture captured July 1, 2026.`,
+    sourceUrl: schedule.sourceUrl,
+    title: `${schedule.teamName} ${formatSite(game.site)} ${game.opponent}`,
+    body: `${schedule.teamName} ${formatSite(game.site)} ${game.opponent} on ${game.dateLabel}. Kickoff: ${game.kickoff}. Venue: ${game.venue}.${tv} Source freshness: official schedule fixture captured ${captured}.`,
     metadata: {
-      seasonYear: fixture.seasonYear,
+      seasonYear: schedule.seasonYear,
       gameId: game.id,
       opponent: game.opponent,
       site: game.site,
@@ -67,16 +76,4 @@ function createGameDocument(
     publishedAt: game.startsAt ?? undefined,
     fetchedAt,
   };
-}
-
-function formatSite(game: Pick<FixtureGame, "site">) {
-  if (game.site === "away") {
-    return "at";
-  }
-
-  if (game.site === "neutral") {
-    return "vs";
-  }
-
-  return "vs";
 }

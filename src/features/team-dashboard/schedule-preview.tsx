@@ -1,18 +1,22 @@
-import scheduleFixture from "../../../data/fixtures/texas-football/schedule.json";
+import { formatCaptureDate, formatSite, getTeamSchedule } from "@/server/schedule/schedule";
 
-const siteLabels = {
-  home: "vs",
-  away: "at",
-  neutral: "neutral",
-} as const;
+type SchedulePreviewProps = {
+  teamSlug: string;
+};
 
-export function SchedulePreview() {
+export function SchedulePreview({ teamSlug }: SchedulePreviewProps) {
+  const schedule = getTeamSchedule(teamSlug);
+
+  if (!schedule) {
+    return null;
+  }
+
   return (
     <section className="rounded-lg border border-[var(--team-border)] bg-[var(--team-surface)] p-5 shadow-sm">
       <div className="flex items-start justify-between gap-4">
         <div>
           <p className="text-xs font-semibold uppercase tracking-normal text-[var(--team-accent-strong)]">
-            2026 schedule
+            {schedule.seasonYear} schedule
           </p>
           <h2 className="mt-2 text-xl font-semibold tracking-normal">
             First six-game stretch
@@ -23,11 +27,11 @@ export function SchedulePreview() {
         </span>
       </div>
       <div className="mt-4 divide-y divide-[var(--team-border)]">
-        {scheduleFixture.games.slice(0, 6).map((game) => (
+        {schedule.games.slice(0, 6).map((game) => (
           <div className="grid gap-1 py-3 text-sm" key={game.id}>
             <div className="flex items-center justify-between gap-3">
               <span className="font-semibold text-[var(--team-ink-subtle)]">
-                {siteLabels[game.site as keyof typeof siteLabels]} {game.opponent}
+                {formatSite(game.site)} {game.opponent}
               </span>
               <span className="text-xs font-semibold uppercase text-[var(--team-muted)]">
                 {game.kickoff}
@@ -41,7 +45,8 @@ export function SchedulePreview() {
         ))}
       </div>
       <p className="mt-4 text-xs leading-5 text-[var(--team-muted)]">
-        Source freshness: official schedule fixture captured July 1, 2026.
+        Source freshness: official schedule fixture captured{" "}
+        {formatCaptureDate(schedule.capturedAt)}.
       </p>
     </section>
   );

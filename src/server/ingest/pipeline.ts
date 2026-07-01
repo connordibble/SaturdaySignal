@@ -17,7 +17,7 @@ export async function collectSourceDocuments(
 
   const fixtureDocuments = getFixtureScheduleDocuments(team.slug);
   const officialDocuments = getOfficialLinkDocuments(team);
-  const cfbd = await getCfbdScheduleDocuments(team.slug);
+  const cfbd = await getCfbdScheduleDocuments(team);
   const documents = dedupeDocuments([
     ...fixtureDocuments,
     ...officialDocuments,

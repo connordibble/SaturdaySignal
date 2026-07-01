@@ -52,18 +52,17 @@ function scoreChunk(chunk: SourceChunk, queryTerms: string[], rawQuery: string) 
     }
   }
 
+  // Schedule-intent questions should surface the schedule summary and game
+  // documents first. This is generic across teams; opponent-specific matches
+  // fall out of the term scoring above.
   if (/next|opener|brief|schedule/i.test(rawQuery)) {
     if (chunk.document.sourceType === "schedule") {
       score += 4;
     }
 
-    if (String(chunk.document.metadata.gameId ?? "").includes("texas-state")) {
-      score += 3;
+    if (chunk.document.sourceType === "game") {
+      score += 1;
     }
-  }
-
-  if (/ohio|state/i.test(rawQuery) && /ohio state/i.test(content)) {
-    score += 5;
   }
 
   return score;
