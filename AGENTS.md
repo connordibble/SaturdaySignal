@@ -1,0 +1,13 @@
+<!-- BEGIN:nextjs-agent-rules -->
+# This is NOT the Next.js you know
+
+This version has breaking changes — APIs, conventions, and file structure may all differ from your training data. Read the relevant guide in `node_modules/next/dist/docs/` before writing any code. Heed deprecation notices.
+<!-- END:nextjs-agent-rules -->
+
+# Saturday Signal Working Rules
+
+- Use `pnpm` for all package, script, and lockfile work.
+- Keep commits in Conventional Commit style, one or two lines, with no co-author trailers.
+- Keep the product independent: do not use UT marks, Bevo branding, or official-affiliation language.
+- Preserve the platform shape: team-specific choices belong in typed config, not scattered UI copy.
+- Verify each slice with `pnpm check`, `pnpm build`, and a browser or Playwright smoke test before committing.
