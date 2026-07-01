@@ -7,6 +7,7 @@ test("loads the Saturday Signal shell", async ({ page }) => {
   await expect(page.getByText("Texas football reference deployment")).toBeVisible();
   await expect(page.getByRole("button", { name: "Ask Saturday Signal" })).toBeVisible();
   await expect(page.getByText("Independent fan project")).toBeVisible();
+  await expect(page.getByText("First six-game stretch")).toBeVisible();
 });
 
 test("loads the canonical Texas football route", async ({ page }) => {

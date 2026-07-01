@@ -13,5 +13,6 @@ describe("Home", () => {
       screen.getByText("Texas football reference deployment"),
     ).toBeInTheDocument();
     expect(screen.getByText("Grounded assistant")).toBeInTheDocument();
+    expect(screen.getByText("First six-game stretch")).toBeInTheDocument();
   });
 });

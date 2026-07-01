@@ -6,6 +6,7 @@ import {
   ShieldCheck,
 } from "lucide-react";
 import type { TeamConfig } from "@/config/team";
+import { SchedulePreview } from "./schedule-preview";
 import { TeamChat } from "./team-chat";
 
 type TeamDashboardProps = {
@@ -83,6 +84,8 @@ export function TeamDashboard({ team }: TeamDashboardProps) {
                 {team.nextGame.note}
               </p>
             </section>
+
+            <SchedulePreview />
 
             <section className="rounded-lg border border-[#d8d4c6] bg-[#fffdf7] p-5">
               <div className="flex items-center gap-2 text-sm font-semibold text-[#425047]">
