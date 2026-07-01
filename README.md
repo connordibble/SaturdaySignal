@@ -16,7 +16,16 @@ Open [http://127.0.0.1:3000](http://127.0.0.1:3000).
 ```bash
 pnpm check
 pnpm build
+pnpm ingest
 pnpm test:e2e
+```
+
+## Local Data Services
+
+```bash
+docker compose up -d
+pnpm db:migrate
+pnpm ingest
 ```
 
 ## Product Posture

@@ -101,7 +101,7 @@ export function TeamDashboard({ team }: TeamDashboardProps) {
                     Next game
                   </p>
                   <h2 className="mt-2 text-2xl font-semibold tracking-normal">
-                    Texas at {team.nextGame.opponent}
+                    Texas {formatSite(team.nextGame.site)} {team.nextGame.opponent}
                   </h2>
                 </div>
                 <CalendarDays aria-hidden="true" className="text-[#557763]" size={25} />
@@ -114,6 +114,14 @@ export function TeamDashboard({ team }: TeamDashboardProps) {
                 <div className="rounded-md bg-[#f3f0e7] p-3">
                   <dt className="font-semibold text-[#657068]">Venue</dt>
                   <dd className="mt-1 text-[#171916]">{team.nextGame.venue}</dd>
+                </div>
+                <div className="rounded-md bg-[#f3f0e7] p-3">
+                  <dt className="font-semibold text-[#657068]">Kickoff</dt>
+                  <dd className="mt-1 text-[#171916]">{team.nextGame.kickoff}</dd>
+                </div>
+                <div className="rounded-md bg-[#f3f0e7] p-3">
+                  <dt className="font-semibold text-[#657068]">TV</dt>
+                  <dd className="mt-1 text-[#171916]">{team.nextGame.tv ?? "TBD"}</dd>
                 </div>
               </dl>
               <p className="mt-4 text-sm leading-6 text-[#4f5a52]">
@@ -154,4 +162,12 @@ export function TeamDashboard({ team }: TeamDashboardProps) {
       </div>
     </main>
   );
+}
+
+function formatSite(site: TeamConfig["nextGame"]["site"]) {
+  if (site === "away") {
+    return "at";
+  }
+
+  return "vs";
 }
