@@ -1,3 +1,4 @@
+import { getTeamConfig } from "@/config/team";
 import { answerQuestion } from "@/server/chat/answer";
 
 export const runtime = "nodejs";
@@ -12,6 +13,10 @@ export async function POST(request: Request) {
 
   if (!body.message?.trim()) {
     return Response.json({ error: "message is required" }, { status: 400 });
+  }
+
+  if (body.teamSlug && !getTeamConfig(body.teamSlug)) {
+    return Response.json({ error: `Unknown team slug: ${body.teamSlug}` }, { status: 404 });
   }
 
   const answer = await answerQuestion(body.message, body.teamSlug);
