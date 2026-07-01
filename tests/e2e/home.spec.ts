@@ -13,7 +13,7 @@ test("loads the canonical Texas football route", async ({ page }) => {
   await page.goto("/teams/texas-football");
 
   await expect(page.getByRole("heading", { name: "Saturday Signal" })).toBeVisible();
-  await expect(page.getByText("Configured for Texas football")).toBeVisible();
+  await expect(page.getByText("Grounded assistant")).toBeVisible();
 });
 
 test("health and ingest APIs respond", async ({ request }) => {
@@ -36,4 +36,46 @@ test("health and ingest APIs respond", async ({ request }) => {
   };
   expect(ingestBody.teamSlug).toBe("texas-football");
   expect(ingestBody.documentCount).toBe(14);
+});
+
+test("chat API returns grounded citations", async ({ request }) => {
+  const response = await request.post("/api/chat", {
+    data: {
+      teamSlug: "texas-football",
+      message: "Give me the next-game briefing.",
+    },
+  });
+
+  expect(response.ok()).toBe(true);
+  const body = (await response.json()) as {
+    answer: string;
+    citations: Array<{ title: string }>;
+  };
+  expect(body.answer).toContain("Texas State");
+  expect(body.citations.length).toBeGreaterThanOrEqual(2);
+});
+
+test("chat API can stream server-sent events", async ({ request }) => {
+  const response = await request.post("/api/chat", {
+    headers: { Accept: "text/event-stream" },
+    data: {
+      teamSlug: "texas-football",
+      message: "Give me the next-game briefing.",
+    },
+  });
+
+  expect(response.ok()).toBe(true);
+  const body = await response.text();
+  expect(body).toContain("event: answer");
+  expect(body).toContain("event: citations");
+  expect(body).toContain("event: done");
+});
+
+test("chat UI submits a question and opens citations", async ({ page }) => {
+  await page.goto("/");
+  await page.getByLabel("Ask Saturday Signal").fill("Give me the next-game briefing.");
+  await page.getByRole("button", { name: "Ask Saturday Signal" }).click();
+
+  await expect(page.getByText("Texas opens the 2026 schedule vs Texas State")).toBeVisible();
+  await expect(page.getByRole("link", { name: /Texas football 2026 schedule/i })).toBeVisible();
 });

@@ -12,6 +12,6 @@ describe("Home", () => {
     expect(
       screen.getByText("Texas football reference deployment"),
     ).toBeInTheDocument();
-    expect(screen.getByText("Configured for Texas football")).toBeInTheDocument();
+    expect(screen.getByText("Grounded assistant")).toBeInTheDocument();
   });
 });

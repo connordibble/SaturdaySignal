@@ -1,5 +1,4 @@
 import {
-  Activity,
   CalendarDays,
   Gauge,
   MessageSquareText,
@@ -7,6 +6,7 @@ import {
   ShieldCheck,
 } from "lucide-react";
 import type { TeamConfig } from "@/config/team";
+import { TeamChat } from "./team-chat";
 
 type TeamDashboardProps = {
   team: TeamConfig;
@@ -45,52 +45,7 @@ export function TeamDashboard({ team }: TeamDashboardProps) {
               </div>
             </div>
 
-            <div className="flex flex-1 flex-col justify-between gap-8 p-5">
-              <div className="max-w-3xl">
-                <p className="text-sm font-semibold uppercase tracking-normal text-[#7f3f25]">
-                  Configured for {team.displayName}
-                </p>
-                <h2 className="mt-3 max-w-2xl text-4xl font-semibold leading-tight tracking-normal text-[#111411] sm:text-5xl">
-                  Built for fans who want signal, not generic recap sludge.
-                </h2>
-                <p className="mt-4 max-w-2xl text-base leading-7 text-[#4f5a52]">
-                  Saturday Signal will pair trusted sources, retrieval, and a
-                  sports-native voice so answers sound like a sharp fan analyst
-                  with citations, not a tech demo in team colors.
-                </p>
-              </div>
-
-              <div className="grid gap-3 sm:grid-cols-3">
-                {team.suggestedPrompts.map((prompt) => (
-                  <button
-                    className="min-h-24 rounded-md border border-[#d8d4c6] bg-[#f9f7ef] p-4 text-left text-sm font-medium leading-5 text-[#29322d] transition hover:border-[#8aa897] hover:bg-[#eef5ef]"
-                    key={prompt}
-                    type="button"
-                  >
-                    {prompt}
-                  </button>
-                ))}
-              </div>
-
-              <form className="flex flex-col gap-3 border-t border-[#e0dccf] pt-5 sm:flex-row">
-                <label className="sr-only" htmlFor="chat-input">
-                  Ask Saturday Signal
-                </label>
-                <input
-                  className="min-h-12 flex-1 rounded-md border border-[#c9c2b0] bg-white px-4 text-sm text-[#171916] outline-none transition placeholder:text-[#7b827b] focus:border-[#557763] focus:ring-2 focus:ring-[#b8d8c0]"
-                  id="chat-input"
-                  placeholder="Ask for a next-game brief, matchup read, or source-backed context..."
-                  type="text"
-                />
-                <button
-                  className="inline-flex min-h-12 items-center justify-center gap-2 rounded-md bg-[#17221d] px-5 text-sm font-semibold text-[#f6f5f1] transition hover:bg-[#26382f]"
-                  type="button"
-                >
-                  <Activity aria-hidden="true" size={17} />
-                  Ask Saturday Signal
-                </button>
-              </form>
-            </div>
+            <TeamChat teamSlug={team.slug} suggestedPrompts={team.suggestedPrompts} />
           </div>
 
           <aside className="grid content-start gap-5">
