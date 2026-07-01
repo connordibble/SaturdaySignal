@@ -51,5 +51,5 @@ pnpm db:seed
 ## Current Limits
 
 - CFBD live ingestion is optional and skipped unless `CFBD_API_KEY` is configured.
-- Chat uses deterministic retrieval over the current source set by default.
+- Chat uses deterministic, source-grounded retrieval over the current source set. MVP1 makes no external LLM calls.
 - Multi-tenant auth, billing, admin source management, and hosted SaaS operations are intentionally out of MVP1.
