@@ -59,6 +59,7 @@ describe("TeamChat", () => {
 
     render(
       <TeamChat
+        compactTagline="Test signal."
         suggestedPrompts={["Give me the next-game briefing."]}
         tagline="Test tagline"
         teamSlug="texas-football"
@@ -89,6 +90,7 @@ describe("TeamChat", () => {
 
     render(
       <TeamChat
+        compactTagline="Test signal."
         suggestedPrompts={["Give me the next-game briefing."]}
         tagline="Test tagline"
         teamSlug="texas-football"
@@ -124,7 +126,12 @@ describe("TeamChat", () => {
     );
 
     render(
-      <TeamChat suggestedPrompts={["Prompt"]} tagline="Test tagline" teamSlug="nope" />,
+      <TeamChat
+        compactTagline="Test signal."
+        suggestedPrompts={["Prompt"]}
+        tagline="Test tagline"
+        teamSlug="nope"
+      />,
     );
 
     await userEvent.click(screen.getByRole("button", { name: "Prompt" }));

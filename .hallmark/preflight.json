@@ -1,0 +1,9 @@
+{
+  "lastScan": "2026-07-03",
+  "designSystem": "DESIGN.md",
+  "fontStack": "Geist + Geist Mono via next/font/google in src/app/layout.tsx",
+  "palette": "Team theme tokens in src/config/team.ts with Hallmark global tokens in tokens.css",
+  "motion": "motion-cut; no framer-motion, gsap, or similar motion dependency in package.json",
+  "spacing": "Tailwind v4 utility scale plus 4-point Hallmark tokens",
+  "framework": "Next.js 16 app router"
+}
