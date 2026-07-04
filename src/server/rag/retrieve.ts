@@ -43,18 +43,36 @@ export function retrieveSourceChunks(
 }
 
 function scoreChunk(chunk: SourceChunk, queryTerms: string[], rawQuery: string) {
-  const content = `${chunk.document.title} ${chunk.content}`.toLowerCase();
+  const title = chunk.document.title.toLowerCase();
+  const content = `${title} ${chunk.content.toLowerCase()}`;
   let score = 0;
 
   for (const term of queryTerms) {
-    if (content.includes(term)) {
-      score += term.length > 4 ? 2 : 1;
+    const occurrences = countOccurrences(content, term);
+
+    if (occurrences === 0) {
+      continue;
+    }
+
+    const weight = term.length > 4 ? 2 : 1;
+    score += Math.min(occurrences, 3) * weight;
+
+    if (title.includes(term)) {
+      score += 2;
+    }
+  }
+
+  // Adjacent query terms appearing together ("ohio state", "roster context")
+  // disambiguate far better than the terms alone, so phrase hits dominate.
+  for (const phrase of bigrams(queryTerms)) {
+    if (content.includes(phrase)) {
+      score += 4;
     }
   }
 
   // Schedule-intent questions should surface the schedule summary and game
   // documents first. This is generic across teams; opponent-specific matches
-  // fall out of the term scoring above.
+  // fall out of the term and phrase scoring above.
   if (/next|opener|brief|schedule/i.test(rawQuery)) {
     if (chunk.document.sourceType === "schedule") {
       score += 4;
@@ -66,6 +84,28 @@ function scoreChunk(chunk: SourceChunk, queryTerms: string[], rawQuery: string) 
   }
 
   return score;
+}
+
+function countOccurrences(content: string, term: string): number {
+  let count = 0;
+  let index = content.indexOf(term);
+
+  while (index !== -1) {
+    count += 1;
+    index = content.indexOf(term, index + term.length);
+  }
+
+  return count;
+}
+
+function bigrams(terms: string[]): string[] {
+  const phrases: string[] = [];
+
+  for (let index = 0; index < terms.length - 1; index += 1) {
+    phrases.push(`${terms[index]} ${terms[index + 1]}`);
+  }
+
+  return phrases;
 }
 
 function tokenize(query: string) {

@@ -37,6 +37,7 @@ describe("source readiness", () => {
     const states = getSourceReadiness(defaultTeamConfig);
 
     expect(states).toContainEqual({ label: "Schedule fixture", state: "Ready" });
+    expect(states).toContainEqual({ label: "Team notes (sample)", state: "Ready" });
     expect(states).toContainEqual({ label: "Official links", state: "Ready" });
     expect(states).toContainEqual({ label: "CFBD adapter", state: "Needs key" });
   });

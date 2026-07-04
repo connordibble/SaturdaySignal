@@ -28,6 +28,6 @@ describe("POST /api/ingest", () => {
       documentCount: number;
     };
     expect(body.teamSlug).toBe("texas-football");
-    expect(body.documentCount).toBe(14);
+    expect(body.documentCount).toBe(20);
   });
 });

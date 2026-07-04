@@ -36,7 +36,7 @@ test("health and ingest APIs respond", async ({ request }) => {
     documentCount: number;
   };
   expect(ingestBody.teamSlug).toBe("texas-football");
-  expect(ingestBody.documentCount).toBe(14);
+  expect(ingestBody.documentCount).toBe(20);
 });
 
 test("chat API returns grounded citations", async ({ request }) => {
@@ -91,6 +91,8 @@ test("chat UI holds a multi-turn conversation", async ({ page }) => {
   await page.getByRole("button", { name: "Ask Saturday Signal" }).click();
 
   await expect(page.getByText("How does Ohio State look?")).toBeVisible();
-  await expect(page.getByText(/Texas vs Ohio State on Saturday, September 12/)).toBeVisible();
+  await expect(
+    page.getByText(/Ohio State in week two is the schedule's first real line-of-scrimmage test/),
+  ).toBeVisible();
   await expect(page.getByText("Give me the next-game briefing.")).toBeVisible();
 });

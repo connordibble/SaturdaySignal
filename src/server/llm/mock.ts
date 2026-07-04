@@ -49,13 +49,21 @@ function composeAnswer(request: LlmRequest): string {
   const excerpt = grounding.excerpts[0];
 
   if (excerpt) {
-    return `${firstSentence(excerpt.content)} The football read behind that: watch early downs, field position, and whether ${grounding.teamName} controls the line of scrimmage before drawing bigger conclusions. ${anchor}`.trim();
+    return `${firstSentences(excerpt.content, 2)} For ${grounding.teamName}, that is the early-down and line-of-scrimmage lens to carry into game week. ${anchor}`.trim();
   }
 
   return `The source-backed read is to start with early downs, field position, and whether ${grounding.teamName} controls the line of scrimmage. The current corpus is strongest on schedule and game context, so I would keep this answer tied to the fixture until richer charting or game-note sources land. ${anchor}`.trim();
 }
 
-function firstSentence(content: string): string {
-  const match = content.match(/^.*?[.!?](?:\s|$)/);
-  return (match ? match[0] : content).trim();
+function firstSentences(content: string, count: number): string {
+  const sentences = content.match(/[^.!?]+[.!?]+(?:\s|$)/g);
+
+  if (!sentences) {
+    return content.trim();
+  }
+
+  return sentences
+    .slice(0, count)
+    .map((sentence) => sentence.trim())
+    .join(" ");
 }

@@ -21,7 +21,7 @@ DATABASE_URL=postgres://postgres:postgres@127.0.0.1:5432/saturday_signal pnpm db
 Expected seed result:
 
 - 12 games
-- 14 source documents
+- 20 source documents (schedule, sample team notes, official links)
 - CFBD warning when `CFBD_API_KEY` is absent
 
 ## Product Criteria

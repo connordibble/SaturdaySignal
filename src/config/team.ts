@@ -1,5 +1,6 @@
 import { z } from "zod";
 import { getTeamSchedule } from "@/server/schedule/schedule";
+import { getTeamNoteDocuments } from "@/server/sources/notes";
 
 export type SourceReadinessState = "Ready" | "Planned" | "Needs key";
 export type SourceState = { label: string; state: SourceReadinessState };
@@ -148,6 +149,10 @@ export function getSourceReadiness(team: TeamConfig): SourceState[] {
     {
       label: "Schedule fixture",
       state: getTeamSchedule(team.slug) ? "Ready" : "Planned",
+    },
+    {
+      label: "Team notes (sample)",
+      state: getTeamNoteDocuments(team.slug).length > 0 ? "Ready" : "Planned",
     },
     { label: "Official links", state: "Ready" },
   ];
