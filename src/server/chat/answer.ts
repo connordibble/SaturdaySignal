@@ -31,11 +31,13 @@ export async function answerQuestion(
 
   try {
     const result = await provider.generate(prepared.request);
+    assertUsableAnswer(result.text, provider.name);
     return finalizeAnswer(prepared, provider.name, result.model, result.text);
   } catch {
     // A misbehaving or unreachable provider must not take chat down; the
     // deterministic composer always has a grounded answer available.
     const result = await fallback.generate(prepared.request);
+    assertUsableAnswer(result.text, fallback.name);
     return finalizeAnswer(
       prepared,
       fallback.name,
@@ -72,8 +74,10 @@ export async function* streamAnswerEvents(
       streamed += delta;
       yield { type: "delta", text: delta };
     }
+
+    assertUsableAnswer(streamed, provider.name);
   } catch {
-    if (streamed.length > 0) {
+    if (hasUsableAnswer(streamed)) {
       // Partial answer already reached the client; close it out honestly
       // rather than splicing in a second answer.
       warning = `Live LLM provider "${provider.name}" failed mid-stream; the answer may be incomplete.`;
@@ -85,10 +89,12 @@ export async function* streamAnswerEvents(
       if (provider !== fallback) {
         warning = `Live LLM provider "${provider.name}" failed; served deterministic answer.`;
       }
+      streamed = "";
       for await (const delta of fallback.stream(prepared.request)) {
         streamed += delta;
         yield { type: "delta", text: delta };
       }
+      assertUsableAnswer(streamed, fallback.name);
     }
   }
 
@@ -208,6 +214,16 @@ function finalizeAnswer(
     provider: providerName,
     model,
   };
+}
+
+function assertUsableAnswer(text: string, providerName: string): void {
+  if (!hasUsableAnswer(text)) {
+    throw new Error(`LLM provider "${providerName}" returned an empty answer.`);
+  }
+}
+
+function hasUsableAnswer(text: string): boolean {
+  return text.trim().length > 0;
 }
 
 function createCitations(
