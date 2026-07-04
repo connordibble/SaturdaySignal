@@ -18,3 +18,20 @@ export function createDbClient(connectionString = process.env.DATABASE_URL) {
     client,
   };
 }
+
+export type Db = ReturnType<typeof createDbClient>["db"];
+
+// One connection for the process lifetime; postgres.js queues queries on it.
+let sharedDb: Db | null = null;
+
+export function getSharedDb(): Db | null {
+  if (!hasDatabaseUrl()) {
+    return null;
+  }
+
+  if (!sharedDb) {
+    sharedDb = createDbClient().db;
+  }
+
+  return sharedDb;
+}

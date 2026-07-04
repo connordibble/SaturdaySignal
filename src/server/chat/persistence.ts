@@ -1,4 +1,4 @@
-import { createDbClient, hasDatabaseUrl } from "@/server/db/client";
+import { getSharedDb, type Db } from "@/server/db/client";
 import { answerCitations, chatMessages, chatSessions } from "@/server/db/schema";
 import type { ChatAnswer } from "./types";
 
@@ -9,23 +9,6 @@ export type ChatExchange = {
 };
 
 export type PersistedExchange = { sessionId: string };
-
-type Db = ReturnType<typeof createDbClient>["db"];
-
-// One connection for the process lifetime; postgres.js queues queries on it.
-let sharedDb: Db | null = null;
-
-function getSharedDb(): Db | null {
-  if (!hasDatabaseUrl()) {
-    return null;
-  }
-
-  if (!sharedDb) {
-    sharedDb = createDbClient().db;
-  }
-
-  return sharedDb;
-}
 
 // Best-effort chat history persistence. Without DATABASE_URL this is a no-op;
 // with it, each exchange lands in chat_sessions/chat_messages and citations in
