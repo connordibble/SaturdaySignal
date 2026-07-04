@@ -35,6 +35,7 @@ export function TeamChat({ teamSlug, suggestedPrompts, tagline }: TeamChatProps)
   const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [isLoading, setIsLoading] = useState(false);
   const nextId = useRef(0);
+  const sessionId = useRef<string | undefined>(undefined);
   const threadRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -81,7 +82,12 @@ export function TeamChat({ teamSlug, suggestedPrompts, tagline }: TeamChatProps)
           "Content-Type": "application/json",
           Accept: "text/event-stream",
         },
-        body: JSON.stringify({ teamSlug, message: trimmed, history }),
+        body: JSON.stringify({
+          teamSlug,
+          message: trimmed,
+          history,
+          sessionId: sessionId.current,
+        }),
       });
 
       if (!response.ok || !response.body) {
@@ -102,7 +108,11 @@ export function TeamChat({ teamSlug, suggestedPrompts, tagline }: TeamChatProps)
             citations: ChatCitation[];
             confidence: string;
             freshness: string;
+            sessionId?: string;
           };
+          if (answer.sessionId) {
+            sessionId.current = answer.sessionId;
+          }
           updateMessage(assistantId, (entry) => ({
             ...entry,
             content: answer.answer,

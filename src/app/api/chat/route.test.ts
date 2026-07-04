@@ -28,6 +28,13 @@ describe("POST /api/chat", () => {
     });
   });
 
+  it("rejects a malformed sessionId with 400", async () => {
+    const response = await POST(chatRequest({ message: "next game", sessionId: "abc" }));
+
+    expect(response.status).toBe(400);
+    expect(((await response.json()) as { error: string }).error).toContain("sessionId");
+  });
+
   it("rejects malformed history with 400", async () => {
     const response = await POST(
       chatRequest({ message: "next game", history: [{ role: "system", content: "x" }] }),

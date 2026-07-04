@@ -1,5 +1,6 @@
 import { getTeamConfig } from "@/config/team";
 import { answerQuestion, streamAnswerEvents } from "@/server/chat/answer";
+import { isUuid, persistChatExchange } from "@/server/chat/persistence";
 import type { ChatHistoryMessage } from "@/server/chat/prompt";
 import type { ChatStreamEvent } from "@/server/chat/types";
 
@@ -9,6 +10,7 @@ type ChatRequest = {
   message?: string;
   teamSlug?: string;
   history?: unknown;
+  sessionId?: unknown;
 };
 
 export async function POST(request: Request) {
@@ -31,22 +33,49 @@ export async function POST(request: Request) {
     );
   }
 
-  if (request.headers.get("accept")?.includes("text/event-stream")) {
-    return streamResponse(body.message, body.teamSlug, history);
+  if (body.sessionId !== undefined && (typeof body.sessionId !== "string" || !isUuid(body.sessionId))) {
+    return Response.json({ error: "sessionId must be a UUID" }, { status: 400 });
   }
 
-  const answer = await answerQuestion(body.message, body.teamSlug, { history });
-  return Response.json(answer);
+  const message = body.message;
+  const sessionId = body.sessionId as string | undefined;
+
+  if (request.headers.get("accept")?.includes("text/event-stream")) {
+    return streamResponse(message, body.teamSlug, history, sessionId);
+  }
+
+  const answer = await answerQuestion(message, body.teamSlug, { history });
+  const persisted = await persistChatExchange({ question: message, answer, sessionId });
+
+  return Response.json({ ...answer, sessionId: persisted?.sessionId });
 }
 
-function streamResponse(message: string, teamSlug: string | undefined, history: ChatHistoryMessage[]) {
+function streamResponse(
+  message: string,
+  teamSlug: string | undefined,
+  history: ChatHistoryMessage[],
+  sessionId: string | undefined,
+) {
   const encoder = new TextEncoder();
 
   const stream = new ReadableStream({
     async start(controller) {
       try {
         for await (const event of streamAnswerEvents(message, teamSlug, { history })) {
-          controller.enqueue(encoder.encode(encodeSseEvent(event)));
+          if (event.type === "done") {
+            const persisted = await persistChatExchange({
+              question: message,
+              answer: event.answer,
+              sessionId,
+            });
+            controller.enqueue(
+              encoder.encode(
+                `event: done\ndata: ${JSON.stringify({ ...event.answer, sessionId: persisted?.sessionId })}\n\n`,
+              ),
+            );
+          } else {
+            controller.enqueue(encoder.encode(encodeSseEvent(event)));
+          }
         }
       } catch (error) {
         const detail = error instanceof Error ? error.message : "stream failed";
