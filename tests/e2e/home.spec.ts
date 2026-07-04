@@ -72,11 +72,25 @@ test("chat API can stream server-sent events", async ({ request }) => {
   expect(body).toContain("event: done");
 });
 
-test("chat UI submits a question and opens citations", async ({ page }) => {
+test("chat UI streams a grounded answer with citations", async ({ page }) => {
   await page.goto("/");
   await page.getByLabel("Ask Saturday Signal").fill("Give me the next-game briefing.");
   await page.getByRole("button", { name: "Ask Saturday Signal" }).click();
 
   await expect(page.getByText("Texas opens the 2026 schedule vs Texas State")).toBeVisible();
   await expect(page.getByRole("link", { name: /Texas football 2026 schedule/i })).toBeVisible();
+});
+
+test("chat UI holds a multi-turn conversation", async ({ page }) => {
+  await page.goto("/");
+  await page.getByLabel("Ask Saturday Signal").fill("Give me the next-game briefing.");
+  await page.getByRole("button", { name: "Ask Saturday Signal" }).click();
+  await expect(page.getByText("Texas opens the 2026 schedule vs Texas State")).toBeVisible();
+
+  await page.getByLabel("Ask Saturday Signal").fill("How does Ohio State look?");
+  await page.getByRole("button", { name: "Ask Saturday Signal" }).click();
+
+  await expect(page.getByText("How does Ohio State look?")).toBeVisible();
+  await expect(page.getByText(/Texas vs Ohio State on Saturday, September 12/)).toBeVisible();
+  await expect(page.getByText("Give me the next-game briefing.")).toBeVisible();
 });

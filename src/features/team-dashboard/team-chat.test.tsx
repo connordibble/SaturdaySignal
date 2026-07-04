@@ -1,0 +1,134 @@
+import { render, screen, waitFor } from "@testing-library/react";
+import userEvent from "@testing-library/user-event";
+import { afterEach, describe, expect, it, vi } from "vitest";
+import { TeamChat } from "./team-chat";
+
+function sseResponse(events: Array<{ event: string; data: unknown }>) {
+  const body = events
+    .map((entry) => `event: ${entry.event}\ndata: ${JSON.stringify(entry.data)}\n\n`)
+    .join("");
+
+  return new Response(body, {
+    status: 200,
+    headers: { "Content-Type": "text/event-stream" },
+  });
+}
+
+const answerEvents = [
+  {
+    event: "citations",
+    data: {
+      citations: [
+        {
+          id: "doc-1",
+          title: "Texas football 2026 schedule",
+          sourceUrl: "https://example.com/schedule",
+          provider: "fixture",
+        },
+      ],
+    },
+  },
+  { event: "delta", data: { text: "Texas opens " } },
+  { event: "delta", data: { text: "vs Texas State." } },
+  {
+    event: "done",
+    data: {
+      answer: "Texas opens vs Texas State.",
+      citations: [
+        {
+          id: "doc-1",
+          title: "Texas football 2026 schedule",
+          sourceUrl: "https://example.com/schedule",
+          provider: "fixture",
+        },
+      ],
+      confidence: "high",
+      freshness: "Sources: fixture.",
+    },
+  },
+];
+
+afterEach(() => {
+  vi.unstubAllGlobals();
+});
+
+describe("TeamChat", () => {
+  it("streams an answer into the thread with citations", async () => {
+    const fetchMock = vi.fn(async () => sseResponse(answerEvents));
+    vi.stubGlobal("fetch", fetchMock);
+
+    render(
+      <TeamChat
+        suggestedPrompts={["Give me the next-game briefing."]}
+        tagline="Test tagline"
+        teamSlug="texas-football"
+      />,
+    );
+
+    await userEvent.click(
+      screen.getByRole("button", { name: "Give me the next-game briefing." }),
+    );
+
+    await screen.findByText("Texas opens vs Texas State.");
+    expect(screen.getByText("Give me the next-game briefing.")).toBeInTheDocument();
+    expect(
+      screen.getByRole("link", { name: /Texas football 2026 schedule/i }),
+    ).toBeInTheDocument();
+    expect(screen.getByText(/Confidence: high/i)).toBeInTheDocument();
+
+    const requestBody = JSON.parse(
+      (fetchMock.mock.calls[0] as unknown as [string, { body: string }])[1].body,
+    ) as { message: string; history: unknown[] };
+    expect(requestBody.message).toBe("Give me the next-game briefing.");
+    expect(requestBody.history).toEqual([]);
+  });
+
+  it("sends prior turns as history on follow-up questions", async () => {
+    const fetchMock = vi.fn(async () => sseResponse(answerEvents));
+    vi.stubGlobal("fetch", fetchMock);
+
+    render(
+      <TeamChat
+        suggestedPrompts={["Give me the next-game briefing."]}
+        tagline="Test tagline"
+        teamSlug="texas-football"
+      />,
+    );
+
+    await userEvent.click(
+      screen.getByRole("button", { name: "Give me the next-game briefing." }),
+    );
+    await screen.findByText("Texas opens vs Texas State.");
+
+    await userEvent.type(screen.getByLabelText("Ask Saturday Signal"), "And Ohio State?");
+    await userEvent.click(screen.getByRole("button", { name: "Ask Saturday Signal" }));
+
+    await waitFor(() => expect(fetchMock).toHaveBeenCalledTimes(2));
+
+    const secondBody = JSON.parse(
+      (fetchMock.mock.calls[1] as unknown as [string, { body: string }])[1].body,
+    ) as { history: Array<{ role: string; content: string }> };
+
+    expect(secondBody.history).toEqual([
+      { role: "user", content: "Give me the next-game briefing." },
+      { role: "assistant", content: "Texas opens vs Texas State." },
+    ]);
+  });
+
+  it("surfaces request failures inside the assistant bubble", async () => {
+    vi.stubGlobal(
+      "fetch",
+      vi.fn(async () =>
+        new Response(JSON.stringify({ error: "Unknown team slug: nope" }), { status: 404 }),
+      ),
+    );
+
+    render(
+      <TeamChat suggestedPrompts={["Prompt"]} tagline="Test tagline" teamSlug="nope" />,
+    );
+
+    await userEvent.click(screen.getByRole("button", { name: "Prompt" }));
+
+    await screen.findByText("Unknown team slug: nope");
+  });
+});
