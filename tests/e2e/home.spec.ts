@@ -67,8 +67,8 @@ test("chat API can stream server-sent events", async ({ request }) => {
 
   expect(response.ok()).toBe(true);
   const body = await response.text();
-  expect(body).toContain("event: answer");
   expect(body).toContain("event: citations");
+  expect(body).toContain("event: delta");
   expect(body).toContain("event: done");
 });
 

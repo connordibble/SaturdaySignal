@@ -24,9 +24,11 @@
     "release:check": "pnpm check && pnpm eval && pnpm build && pnpm test:e2e"
   },
   "dependencies": {
+    "@anthropic-ai/sdk": "^0.110.0",
     "drizzle-orm": "^0.45.2",
     "lucide-react": "^1.22.0",
     "next": "16.2.9",
+    "openai": "^6.45.0",
     "postgres": "^3.4.9",
     "react": "19.2.4",
     "react-dom": "19.2.4",
