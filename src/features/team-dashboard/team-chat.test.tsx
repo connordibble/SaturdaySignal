@@ -115,6 +115,42 @@ describe("TeamChat", () => {
     ]);
   });
 
+  it("resets the thread and session for a new conversation", async () => {
+    const fetchMock = vi.fn(async () => sseResponse(answerEvents));
+    vi.stubGlobal("fetch", fetchMock);
+
+    render(
+      <TeamChat
+        suggestedPrompts={["Give me the next-game briefing."]}
+        tagline="Test tagline"
+        teamSlug="texas-football"
+      />,
+    );
+
+    await userEvent.click(
+      screen.getByRole("button", { name: "Give me the next-game briefing." }),
+    );
+    await screen.findByText("Texas opens vs Texas State.");
+
+    await userEvent.click(screen.getByRole("button", { name: /New conversation/i }));
+
+    expect(screen.queryByText("Texas opens vs Texas State.")).not.toBeInTheDocument();
+    expect(
+      screen.getByRole("button", { name: "Give me the next-game briefing." }),
+    ).toBeInTheDocument();
+
+    // A fresh conversation must not resend the old session id
+    await userEvent.click(
+      screen.getByRole("button", { name: "Give me the next-game briefing." }),
+    );
+    await screen.findByText("Texas opens vs Texas State.");
+    const secondBody = JSON.parse(
+      (fetchMock.mock.calls[1] as unknown as [string, { body: string }])[1].body,
+    ) as { history: unknown[]; sessionId?: string };
+    expect(secondBody.history).toEqual([]);
+    expect(secondBody.sessionId).toBeUndefined();
+  });
+
   it("surfaces request failures inside the assistant bubble", async () => {
     vi.stubGlobal(
       "fetch",

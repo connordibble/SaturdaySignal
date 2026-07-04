@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
-import { Activity, ExternalLink, Loader2 } from "lucide-react";
+import { Activity, ExternalLink, Loader2, RotateCcw } from "lucide-react";
 import { readSseStream } from "@/lib/sse";
 
 type TeamChatProps = {
@@ -138,15 +138,38 @@ export function TeamChat({ teamSlug, suggestedPrompts, tagline }: TeamChatProps)
     }
   }
 
+  function resetConversation() {
+    if (isLoading) {
+      return;
+    }
+
+    setMessages([]);
+    sessionId.current = undefined;
+    setInput("");
+  }
+
   return (
     <div className="flex min-h-0 flex-1 flex-col gap-5 p-5">
-      <div className="max-w-3xl">
-        <p className="text-sm font-semibold uppercase tracking-normal text-[var(--team-accent-strong)]">
-          Grounded assistant
-        </p>
-        <h2 className="mt-3 max-w-2xl text-3xl font-semibold leading-tight tracking-normal text-[var(--team-ink)] sm:text-4xl">
-          {tagline}
-        </h2>
+      <div className="flex items-start justify-between gap-4">
+        <div className="max-w-3xl">
+          <p className="text-sm font-semibold uppercase tracking-normal text-[var(--team-accent-strong)]">
+            Grounded assistant
+          </p>
+          <h2 className="mt-3 max-w-2xl text-3xl font-semibold leading-tight tracking-normal text-[var(--team-ink)] sm:text-4xl">
+            {tagline}
+          </h2>
+        </div>
+        {messages.length > 0 ? (
+          <button
+            className="inline-flex shrink-0 items-center gap-2 rounded-md border border-[var(--team-border)] bg-[var(--team-surface)] px-3 py-2 text-xs font-semibold uppercase tracking-normal text-[var(--team-ink-subtle)] transition hover:border-[var(--team-accent)] disabled:cursor-not-allowed disabled:opacity-60"
+            disabled={isLoading}
+            onClick={resetConversation}
+            type="button"
+          >
+            <RotateCcw aria-hidden="true" size={14} />
+            New conversation
+          </button>
+        ) : null}
       </div>
 
       {messages.length === 0 ? (
