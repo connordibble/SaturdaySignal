@@ -234,12 +234,19 @@ function AssistantMessage({ message }: { message: ChatMessage }) {
           {message.freshness ? <span className="normal-case">{message.freshness}</span> : null}
         </div>
       ) : null}
-      <p className="whitespace-pre-wrap text-sm leading-6 text-[var(--team-ink-subtle)]">
-        {message.error ?? message.content}
-        {message.streaming ? (
-          <span aria-hidden="true" className="ml-1 inline-block h-4 w-2 animate-pulse rounded-sm bg-[var(--team-accent)] align-text-bottom" />
-        ) : null}
-      </p>
+      {message.content || !message.error ? (
+        <p className="whitespace-pre-wrap text-sm leading-6 text-[var(--team-ink-subtle)]">
+          {message.content}
+          {message.streaming ? (
+            <span aria-hidden="true" className="ml-1 inline-block h-4 w-2 animate-pulse rounded-sm bg-[var(--team-accent)] align-text-bottom" />
+          ) : null}
+        </p>
+      ) : null}
+      {message.error ? (
+        <p className="mt-2 text-sm font-medium leading-6 text-[var(--team-accent-strong)]">
+          {message.error}
+        </p>
+      ) : null}
       {message.citations.length > 0 ? (
         <div className="mt-3 grid gap-2">
           {message.citations.map((citation) => (

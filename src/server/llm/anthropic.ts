@@ -3,7 +3,7 @@ import { LlmProviderError, type LlmEnv, type LlmProvider, type LlmRequest } from
 
 export const defaultAnthropicModel = "claude-opus-4-8";
 
-const defaultMaxTokens = 1024;
+const defaultMaxTokens = 16000;
 
 export function createAnthropicProvider(env: LlmEnv = process.env): LlmProvider {
   const apiKey = env.ANTHROPIC_API_KEY;

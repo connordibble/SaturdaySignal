@@ -3,7 +3,7 @@ import { LlmProviderError, type LlmEnv, type LlmProvider, type LlmRequest } from
 
 export const defaultOpenAiModel = "gpt-4o";
 
-const defaultMaxTokens = 1024;
+const defaultMaxTokens = 16000;
 
 export function createOpenAiProvider(env: LlmEnv = process.env): LlmProvider {
   const apiKey = env.OPENAI_API_KEY;

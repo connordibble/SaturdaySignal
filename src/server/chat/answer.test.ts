@@ -83,6 +83,65 @@ describe("streamAnswerEvents", () => {
     expect(done.answer.citations.length).toBeGreaterThanOrEqual(2);
   });
 
+  it("marks the answer incomplete when the live provider dies mid-stream", async () => {
+    vi.stubEnv("LLM_PROVIDER", "anthropic");
+    vi.stubEnv("ANTHROPIC_API_KEY", "sk-broken");
+
+    const encoder = new TextEncoder();
+    const sseHead = [
+      `event: message_start\ndata: ${JSON.stringify({
+        type: "message_start",
+        message: {
+          id: "msg_1",
+          type: "message",
+          role: "assistant",
+          model: "claude-opus-4-8",
+          content: [],
+          stop_reason: null,
+          stop_sequence: null,
+          usage: { input_tokens: 1, output_tokens: 1 },
+        },
+      })}\n\n`,
+      `event: content_block_start\ndata: ${JSON.stringify({
+        type: "content_block_start",
+        index: 0,
+        content_block: { type: "text", text: "" },
+      })}\n\n`,
+      `event: content_block_delta\ndata: ${JSON.stringify({
+        type: "content_block_delta",
+        index: 0,
+        delta: { type: "text_delta", text: "Partial answer " },
+      })}\n\n`,
+    ].join("");
+
+    vi.stubGlobal(
+      "fetch",
+      vi.fn(async () =>
+        new Response(
+          new ReadableStream<Uint8Array>({
+            start(controller) {
+              controller.enqueue(encoder.encode(sseHead));
+              // Let the SDK consume the delta before the connection drops,
+              // so the orchestrator hits the mid-stream (partial) path.
+              setTimeout(() => controller.error(new Error("connection reset")), 25);
+            },
+          }),
+          { status: 200, headers: { "Content-Type": "text/event-stream" } },
+        ),
+      ),
+    );
+
+    const events = await collect("Give me the next-game briefing.");
+    const done = events.at(-1);
+
+    if (done?.type !== "done") {
+      throw new Error("expected a done event");
+    }
+    expect(done.answer.confidence).toBe("low");
+    expect(done.answer.freshness).toContain("failed mid-stream");
+    expect(done.answer.answer).toContain("[Answer truncated");
+  }, 30_000);
+
   it("streams guardrail answers as a single delta", async () => {
     const events = await collect("Any betting locks this week?");
     const done = events.at(-1);

@@ -65,6 +65,7 @@ export async function* streamAnswerEvents(
   const { provider, fallback } = resolveProviders(options.env);
   let streamed = "";
   let active = provider;
+  let warning: string | undefined;
 
   try {
     for await (const delta of provider.stream(prepared.request)) {
@@ -75,11 +76,15 @@ export async function* streamAnswerEvents(
     if (streamed.length > 0) {
       // Partial answer already reached the client; close it out honestly
       // rather than splicing in a second answer.
+      warning = `Live LLM provider "${provider.name}" failed mid-stream; the answer may be incomplete.`;
       const notice = " [Answer truncated: the live provider failed mid-stream.]";
       streamed += notice;
       yield { type: "delta", text: notice };
     } else {
       active = fallback;
+      if (provider !== fallback) {
+        warning = `Live LLM provider "${provider.name}" failed; served deterministic answer.`;
+      }
       for await (const delta of fallback.stream(prepared.request)) {
         streamed += delta;
         yield { type: "delta", text: delta };
@@ -87,15 +92,7 @@ export async function* streamAnswerEvents(
     }
   }
 
-  const answer = finalizeAnswer(
-    prepared,
-    active.name,
-    active.model,
-    streamed,
-    active === fallback && provider !== fallback
-      ? `Live LLM provider "${provider.name}" failed; served deterministic answer.`
-      : undefined,
-  );
+  const answer = finalizeAnswer(prepared, active.name, active.model, streamed, warning);
 
   if (answer.answer !== streamed) {
     yield { type: "delta", text: answer.answer.slice(streamed.length) };
