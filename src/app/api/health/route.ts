@@ -1,5 +1,6 @@
 import { enabledTeamSlugs, getSourceReadiness, teamConfigs } from "@/config/team";
 import { describeLlmProvider } from "@/server/llm/registry";
+import { describeEmbeddingProvider } from "@/server/embeddings/registry";
 import { hasDatabaseUrl } from "@/server/db/client";
 
 export const runtime = "nodejs";
@@ -14,6 +15,7 @@ export async function GET() {
     service: "saturday-signal",
     databaseConfigured: hasDatabaseUrl(),
     llm: describeLlmProvider(),
+    embeddings: describeEmbeddingProvider(),
     enabledTeams: enabledTeamSlugs,
     sources,
   });

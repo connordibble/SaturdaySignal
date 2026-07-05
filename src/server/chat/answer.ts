@@ -4,7 +4,7 @@ import { collectSourceDocuments } from "@/server/ingest/pipeline";
 import { createMockLlmProvider } from "@/server/llm/mock";
 import { resolveLlmProvider } from "@/server/llm/registry";
 import type { LlmEnv, LlmProvider, LlmRequest } from "@/server/llm/types";
-import { retrieveSourceChunks } from "@/server/rag/retrieve";
+import { retrieveHybrid } from "@/server/rag/hybrid";
 import { formatCaptureDate, getTeamSchedule } from "@/server/schedule/schedule";
 import { buildChatRequest, type ChatHistoryMessage } from "./prompt";
 import type { ChatAnswer, ChatCitation, ChatStreamEvent } from "./types";
@@ -129,7 +129,7 @@ async function prepareAnswer(
   }
 
   const ingest = await collectSourceDocuments(team.slug);
-  const hits = retrieveSourceChunks(question, ingest.documents, 4);
+  const hits = await retrieveHybrid(question, ingest.documents, team.slug, 4);
   const citations = createCitations(hits.map((hit) => hit.chunk.document));
   const freshness = createFreshness(team.slug, citations, ingest.warnings);
   const officialCitations = createCitations(
