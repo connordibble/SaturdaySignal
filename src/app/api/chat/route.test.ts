@@ -28,6 +28,13 @@ describe("POST /api/chat", () => {
     });
   });
 
+  it("rejects an oversized message with 400", async () => {
+    const response = await POST(chatRequest({ message: "x".repeat(4001) }));
+
+    expect(response.status).toBe(400);
+    expect(((await response.json()) as { error: string }).error).toContain("at most");
+  });
+
   it("rejects a malformed sessionId with 400", async () => {
     const response = await POST(chatRequest({ message: "next game", sessionId: "abc" }));
 

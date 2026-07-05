@@ -1,7 +1,7 @@
 import { getTeamConfig } from "@/config/team";
 import { answerQuestion, streamAnswerEvents } from "@/server/chat/answer";
 import { isUuid, persistChatExchange } from "@/server/chat/persistence";
-import type { ChatHistoryMessage } from "@/server/chat/prompt";
+import { maxMessageLength, type ChatHistoryMessage } from "@/server/chat/prompt";
 import type { ChatStreamEvent } from "@/server/chat/types";
 
 export const runtime = "nodejs";
@@ -18,6 +18,13 @@ export async function POST(request: Request) {
 
   if (!body.message?.trim()) {
     return Response.json({ error: "message is required" }, { status: 400 });
+  }
+
+  if (body.message.length > maxMessageLength) {
+    return Response.json(
+      { error: `message must be at most ${maxMessageLength} characters` },
+      { status: 400 },
+    );
   }
 
   if (body.teamSlug && !getTeamConfig(body.teamSlug)) {
