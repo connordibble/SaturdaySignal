@@ -5,8 +5,11 @@ describe("ingest pipeline", () => {
   it("loads offline Texas schedule fixtures without API keys", async () => {
     const result = await collectSourceDocuments("texas-football");
 
-    expect(result.counts.fixture).toBe(13);
+    expect(result.counts.fixture).toBe(19);
     expect(result.counts.official).toBe(1);
+    expect(
+      result.documents.filter((document) => document.sourceType === "team-note"),
+    ).toHaveLength(6);
     expect(result.warnings).toContain(
       "CFBD_API_KEY not configured; skipped live CFBD ingest.",
     );

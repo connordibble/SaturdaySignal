@@ -1,8 +1,15 @@
 import type { TeamConfig } from "@/config/team";
+import { formatCaptureDate, getTeamSchedule } from "@/server/schedule/schedule";
 import type { SourceDocument } from "./types";
 
 export function getOfficialLinkDocuments(team: TeamConfig): SourceDocument[] {
-  const fetchedAt = new Date("2026-07-01T14:00:00.000Z").toISOString();
+  const schedule = getTeamSchedule(team.slug);
+
+  if (!schedule) {
+    return [];
+  }
+
+  const fetchedAt = schedule.capturedAt;
 
   return [
     {
@@ -10,9 +17,9 @@ export function getOfficialLinkDocuments(team: TeamConfig): SourceDocument[] {
       teamSlug: team.slug,
       provider: "official",
       sourceType: "schedule",
-      sourceUrl: "https://texaslonghorns.com/sports/football/schedule/2026",
-      title: "Official Texas football schedule link",
-      body: "The official Texas Athletics schedule page is the canonical source for kickoff windows, TV assignments, venues, and game-center links. Source freshness: link verified July 1, 2026.",
+      sourceUrl: schedule.sourceUrl,
+      title: `Official ${team.displayName} schedule link`,
+      body: `The official ${team.displayName} schedule page is the canonical source for kickoff windows, TV assignments, venues, and game-center links. Source freshness: link verified ${formatCaptureDate(fetchedAt)}.`,
       metadata: {
         trustedSourceLabels: team.sourcePolicy.trustedSourceLabels,
       },

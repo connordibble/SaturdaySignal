@@ -1,6 +1,7 @@
 import { defaultTeamConfig, getTeamConfig } from "@/config/team";
 import { getCfbdScheduleDocuments } from "@/server/sources/cfbd";
 import { getFixtureScheduleDocuments } from "@/server/sources/fixtures";
+import { getTeamNoteDocuments } from "@/server/sources/notes";
 import { getOfficialLinkDocuments } from "@/server/sources/official";
 import type { IngestResult, SourceDocument, SourceProvider } from "@/server/sources/types";
 
@@ -16,10 +17,12 @@ export async function collectSourceDocuments(
   }
 
   const fixtureDocuments = getFixtureScheduleDocuments(team.slug);
+  const noteDocuments = getTeamNoteDocuments(team.slug);
   const officialDocuments = getOfficialLinkDocuments(team);
-  const cfbd = await getCfbdScheduleDocuments(team.slug);
+  const cfbd = await getCfbdScheduleDocuments(team);
   const documents = dedupeDocuments([
     ...fixtureDocuments,
+    ...noteDocuments,
     ...officialDocuments,
     ...cfbd.documents,
   ]);

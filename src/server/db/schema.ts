@@ -120,6 +120,24 @@ export const chatSessions = pgTable("chat_sessions", {
   createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
 });
 
+export const chatMessages = pgTable(
+  "chat_messages",
+  {
+    id: uuid("id").primaryKey().defaultRandom(),
+    chatSessionId: uuid("chat_session_id")
+      .notNull()
+      .references(() => chatSessions.id, { onDelete: "cascade" }),
+    role: text("role").notNull(),
+    content: text("content").notNull(),
+    provider: text("provider"),
+    model: text("model"),
+    confidence: text("confidence"),
+    mode: text("mode"),
+    createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
+  },
+  (table) => [index("chat_messages_session_idx").on(table.chatSessionId, table.createdAt)],
+);
+
 export const answerCitations = pgTable("answer_citations", {
   id: uuid("id").primaryKey().defaultRandom(),
   chatSessionId: uuid("chat_session_id").references(() => chatSessions.id, {
@@ -138,6 +156,7 @@ export const schema = {
   sourceDocuments,
   sourceChunks,
   chatSessions,
+  chatMessages,
   answerCitations,
 };
 

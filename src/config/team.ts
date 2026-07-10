@@ -1,9 +1,9 @@
 import { z } from "zod";
+import { getTeamSchedule } from "@/server/schedule/schedule";
+import { getTeamNoteDocuments } from "@/server/sources/notes";
 
-const sourceStateSchema = z.object({
-  label: z.string().min(1),
-  state: z.enum(["Ready", "Planned", "Needs key"]),
-});
+export type SourceReadinessState = "Ready" | "Planned" | "Needs key";
+export type SourceState = { label: string; state: SourceReadinessState };
 
 const teamConfigSchema = z.object({
   slug: z.string().min(1),
@@ -11,7 +11,9 @@ const teamConfigSchema = z.object({
   league: z.literal("college-football"),
   conference: z.string().min(1),
   displayName: z.string().min(1),
+  shortName: z.string().min(1),
   referenceLabel: z.string().min(1),
+  tagline: z.string().min(1),
   aliases: z.array(z.string().min(1)),
   theme: z.object({
     page: z.string().min(1),
@@ -39,16 +41,13 @@ const teamConfigSchema = z.object({
     preferredTerms: z.array(z.string().min(1)),
     bannedPhrases: z.array(z.string().min(1)),
   }),
-  nextGame: z.object({
-    opponent: z.string().min(1),
-    site: z.enum(["home", "away", "neutral"]),
-    date: z.string().min(1),
-    kickoff: z.string().min(1),
-    venue: z.string().min(1),
-    tv: z.string().optional(),
-    note: z.string().min(1),
-  }),
-  sourceStates: z.array(sourceStateSchema).min(1),
+  nextGameNote: z.string().min(1),
+  cfbd: z
+    .object({
+      team: z.string().min(1),
+      season: z.number().int(),
+    })
+    .optional(),
   suggestedPrompts: z.array(z.string().min(1)).min(1),
 });
 
@@ -61,7 +60,9 @@ export const teamConfigs = {
     league: "college-football",
     conference: "SEC",
     displayName: "Texas football",
+    shortName: "Texas",
     referenceLabel: "Texas football reference deployment",
+    tagline: "Texas context, clean sources, Saturday-level signal.",
     aliases: ["Texas", "Longhorns", "UT Austin"],
     theme: {
       page: "#fff3e6",
@@ -112,20 +113,12 @@ export const teamConfigs = {
         "guaranteed lock",
       ],
     },
-    nextGame: {
-      opponent: "Texas State",
-      site: "home",
-      date: "Saturday, September 5, 2026",
-      kickoff: "2:30 p.m. CT",
-      venue: "DKR-Texas Memorial Stadium, Austin, Texas",
-      tv: "ESPN",
-      note: "The opener is the first baseline check for early-down efficiency, clean operation, and whether Texas controls the line of scrimmage before the schedule tightens.",
+    nextGameNote:
+      "The opener is the first baseline check for early-down efficiency, clean operation, and whether Texas controls the line of scrimmage before the schedule tightens.",
+    cfbd: {
+      team: "Texas",
+      season: 2026,
     },
-    sourceStates: [
-      { label: "Schedule fixture", state: "Ready" },
-      { label: "CFBD adapter", state: "Planned" },
-      { label: "Official links", state: "Planned" },
-    ],
     suggestedPrompts: [
       "What should Texas fans watch on early downs?",
       "Give me the next-game briefing.",
@@ -146,4 +139,32 @@ export function getTeamConfig(slug: string): TeamConfig | undefined {
 
 export function validateTeamConfig(config: TeamConfig): TeamConfig {
   return teamConfigSchema.parse(config);
+}
+
+// Reflects the real ingest surface rather than a hand-maintained list: the
+// fixture and official links are produced on every ingest, while CFBD depends
+// on both team config and a supplied API key.
+export function getSourceReadiness(team: TeamConfig): SourceState[] {
+  const states: SourceState[] = [
+    {
+      label: "Schedule fixture",
+      state: getTeamSchedule(team.slug) ? "Ready" : "Planned",
+    },
+    {
+      label: "Team notes (sample)",
+      state: getTeamNoteDocuments(team.slug).length > 0 ? "Ready" : "Planned",
+    },
+    { label: "Official links", state: "Ready" },
+  ];
+
+  if (team.cfbd) {
+    states.push({
+      label: "CFBD adapter",
+      state: process.env.CFBD_API_KEY ? "Ready" : "Needs key",
+    });
+  } else {
+    states.push({ label: "CFBD adapter", state: "Planned" });
+  }
+
+  return states;
 }

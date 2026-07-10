@@ -1,9 +1,15 @@
+import { getTeamConfig } from "@/config/team";
 import { collectSourceDocuments } from "@/server/ingest/pipeline";
 
 export const runtime = "nodejs";
 
 export async function POST(request: Request) {
   const body = (await request.json().catch(() => ({}))) as { teamSlug?: string };
+
+  if (body.teamSlug && !getTeamConfig(body.teamSlug)) {
+    return Response.json({ error: `Unknown team slug: ${body.teamSlug}` }, { status: 404 });
+  }
+
   const result = await collectSourceDocuments(body.teamSlug);
 
   return Response.json({

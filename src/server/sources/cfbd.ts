@@ -1,3 +1,4 @@
+import type { TeamConfig } from "@/config/team";
 import { createSourceDocumentId } from "./ids";
 import type { SourceDocument } from "./types";
 
@@ -11,21 +12,35 @@ type CfbdGame = {
   venue?: string;
 };
 
-export async function getCfbdScheduleDocuments(teamSlug: string) {
+export async function getCfbdScheduleDocuments(team: TeamConfig) {
   const apiKey = process.env.CFBD_API_KEY;
 
-  if (!apiKey || teamSlug !== "texas-football") {
-    return { documents: [] satisfies SourceDocument[], warning: "CFBD_API_KEY not configured; skipped live CFBD ingest." };
+  if (!apiKey) {
+    return {
+      documents: [] satisfies SourceDocument[],
+      warning: "CFBD_API_KEY not configured; skipped live CFBD ingest.",
+    };
   }
 
-  const response = await fetch(
-    "https://api.collegefootballdata.com/games?year=2026&team=Texas&seasonType=regular",
-    {
-      headers: {
-        Authorization: `Bearer ${apiKey}`,
-      },
+  if (!team.cfbd) {
+    return {
+      documents: [] satisfies SourceDocument[],
+      warning: `CFBD live ingest is not configured for ${team.slug}.`,
+    };
+  }
+
+  const { team: cfbdTeam, season } = team.cfbd;
+  const query = new URLSearchParams({
+    year: String(season),
+    team: cfbdTeam,
+    seasonType: "regular",
+  });
+
+  const response = await fetch(`https://api.collegefootballdata.com/games?${query}`, {
+    headers: {
+      Authorization: `Bearer ${apiKey}`,
     },
-  );
+  });
 
   if (!response.ok) {
     return {
@@ -39,8 +54,8 @@ export async function getCfbdScheduleDocuments(teamSlug: string) {
 
   return {
     documents: games.map((game) => ({
-      id: createSourceDocumentId([teamSlug, "cfbd", String(game.id)]),
-      teamSlug,
+      id: createSourceDocumentId([team.slug, "cfbd", String(game.id)]),
+      teamSlug: team.slug,
       provider: "cfbd" as const,
       sourceType: "game" as const,
       sourceUrl: "https://collegefootballdata.com/",
