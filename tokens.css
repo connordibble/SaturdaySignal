@@ -1,0 +1,11 @@
+/* Global neutral primitives consumed by globals.css (body + ::selection).
+ * Per-team colors are NOT here — they come from typed config via
+ * createTeamThemeStyle as --team-* custom properties. Keep this file to the
+ * handful of variables globals.css actually references. */
+:root {
+  --color-paper: oklch(96.5% 0.014 72);
+  --color-paper-3: oklch(89.5% 0.025 72);
+  --color-ink: oklch(18% 0.015 48);
+
+  --font-body: var(--font-geist-sans), ui-sans-serif, system-ui, sans-serif;
+}

@@ -59,6 +59,7 @@ describe("TeamChat", () => {
 
     render(
       <TeamChat
+        compactTagline="Test signal."
         suggestedPrompts={["Give me the next-game briefing."]}
         tagline="Test tagline"
         teamSlug="texas-football"
@@ -89,6 +90,7 @@ describe("TeamChat", () => {
 
     render(
       <TeamChat
+        compactTagline="Test signal."
         suggestedPrompts={["Give me the next-game briefing."]}
         tagline="Test tagline"
         teamSlug="texas-football"
@@ -121,6 +123,7 @@ describe("TeamChat", () => {
 
     render(
       <TeamChat
+        compactTagline="Test signal."
         suggestedPrompts={["Give me the next-game briefing."]}
         tagline="Test tagline"
         teamSlug="texas-football"
@@ -139,7 +142,7 @@ describe("TeamChat", () => {
       screen.getByRole("button", { name: "Give me the next-game briefing." }),
     ).toBeInTheDocument();
 
-    // A fresh conversation must not resend the old session id
+    // A fresh conversation must not resend the old session id or history
     await userEvent.click(
       screen.getByRole("button", { name: "Give me the next-game briefing." }),
     );
@@ -160,7 +163,12 @@ describe("TeamChat", () => {
     );
 
     render(
-      <TeamChat suggestedPrompts={["Prompt"]} tagline="Test tagline" teamSlug="nope" />,
+      <TeamChat
+        compactTagline="Test signal."
+        suggestedPrompts={["Prompt"]}
+        tagline="Test tagline"
+        teamSlug="nope"
+      />,
     );
 
     await userEvent.click(screen.getByRole("button", { name: "Prompt" }));

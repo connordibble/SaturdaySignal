@@ -1,7 +1,15 @@
 import { collectSourceDocuments } from "../src/server/ingest/pipeline";
 import { defaultTeamConfig } from "../src/config/team";
 import { createDbClient } from "../src/server/db/client";
-import { games, seasons, sourceDocuments, teams } from "../src/server/db/schema";
+import {
+  games,
+  seasons,
+  sourceChunks,
+  sourceDocuments,
+  teams,
+} from "../src/server/db/schema";
+import { chunkSourceDocuments } from "../src/server/rag/chunk";
+import { resolveEmbeddingProvider } from "../src/server/embeddings/registry";
 import scheduleFixture from "../data/fixtures/texas-football/schedule.json";
 
 async function main() {
@@ -104,6 +112,37 @@ async function main() {
       });
   }
 
+  // Chunk the corpus and persist embeddings so chat can use pgvector search.
+  // Uses the configured embedding provider (deterministic mock by default, a
+  // real model when OPENAI_API_KEY / EMBEDDINGS_PROVIDER is set).
+  const { provider: embeddings, warning: embeddingWarning } = resolveEmbeddingProvider();
+  const chunks = chunkSourceDocuments(result.documents);
+  const vectors = await embeddings.embed(chunks.map((chunk) => chunk.content));
+
+  for (const [index, chunk] of chunks.entries()) {
+    const embedding = vectors[index];
+
+    await db
+      .insert(sourceChunks)
+      .values({
+        id: chunk.id,
+        sourceDocumentId: chunk.sourceDocumentId,
+        chunkIndex: chunk.chunkIndex,
+        content: chunk.content,
+        tokenEstimate: chunk.tokenEstimate,
+        embedding,
+        metadata: {},
+      })
+      .onConflictDoUpdate({
+        target: sourceChunks.id,
+        set: {
+          content: chunk.content,
+          tokenEstimate: chunk.tokenEstimate,
+          embedding,
+        },
+      });
+  }
+
   await client.end();
 
   console.log(
@@ -111,10 +150,12 @@ async function main() {
       {
         teamSlug: result.teamSlug,
         counts: result.counts,
-        warnings: result.warnings,
+        warnings: embeddingWarning ? [...result.warnings, embeddingWarning] : result.warnings,
+        embeddings: { provider: embeddings.name, model: embeddings.model },
         persisted: {
           games: scheduleFixture.games.length,
           sourceDocuments: result.documents.length,
+          sourceChunks: chunks.length,
         },
       },
       null,
